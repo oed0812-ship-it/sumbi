@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 300" width="460" height="300">
+  <!--
+    샘플/가이드 SVG — assets/img/bulteok.svg
+    실제 게임에서는 js/render.js drawBulteok() 이 이 이미지를
+    캔버스 절대좌표 (0,300) 크기 460x300 그대로 얹습니다(변환 없음).
+    즉 이 SVG의 (0,0)은 게임 화면의 (0,300)과 같습니다.
+
+    포함 요소(전부 정적 — 화덕 불꽃/연기/불빛은 애니메이션이라 코드가
+    이 이미지 위에 따로 그립니다):
+      - 언덕 (집·밭이 얹히는 완만한 둔덕)
+      - 불턱 돌담 (현무암을 둥글게 쌓아 올린 바람막이, 왼쪽은 트여 있음.
+        안쪽 큰 돌 13개 + 앞쪽 작은 돌 7개, 이중으로 쌓은 느낌)
+      - 화덕 구덩이 + 테두리 조약돌 + 장작 (불꽃 제외)
+
+    이 레이어를 그대로 지우고 원하는 그림으로 바꾸셔도 되고,
+    아래 도형을 기준선 삼아 트레이싱하셔도 됩니다.
+    파일명/크기(460x300)만 유지하면 코드 수정 없이 바로 적용됩니다.
+  -->
+  <defs>
+    <!-- 왼쪽 위에서 빛을 받는 둥근 현무암 — 그라디언트만으로 입체감을 낸다 -->
+    <radialGradient id="stoneA" cx="32%" cy="28%" r="78%">
+      <stop offset="0%"  stop-color="#6e7680"/>
+      <stop offset="55%" stop-color="#454d56"/>
+      <stop offset="100%" stop-color="#20252b"/>
+    </radialGradient>
+    <radialGradient id="stoneB" cx="32%" cy="28%" r="78%">
+      <stop offset="0%"  stop-color="#5f6b6c"/>
+      <stop offset="55%" stop-color="#3a4547"/>
+      <stop offset="100%" stop-color="#1a2122"/>
+    </radialGradient>
+    <radialGradient id="stoneC" cx="32%" cy="28%" r="78%">
+      <stop offset="0%"  stop-color="#697268"/>
+      <stop offset="55%" stop-color="#40473e"/>
+      <stop offset="100%" stop-color="#1e221c"/>
+    </radialGradient>
+    <radialGradient id="pebble" cx="32%" cy="28%" r="78%">
+      <stop offset="0%"  stop-color="#7a828c"/>
+      <stop offset="60%" stop-color="#4c545c"/>
+      <stop offset="100%" stop-color="#262b30"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 언덕 -->
+  <path d="M -11,68 Q 99,12 209,18 Q 329,26 439,68 Z" fill="#354a52"/>
+
+  <!-- 불턱 돌담 — 뒤쪽(안쪽) 큰 돌 13개. 왼쪽(x<65 부근)이 트여 있다 -->
+  <g>
+    <ellipse cx="65.5"  cy="133.6" rx="15" ry="12.5" fill="url(#stoneA)" transform="rotate(-8 65.5 133.6)"/>
+    <ellipse cx="78.9"  cy="112.1" rx="18" ry="14.5" fill="url(#stoneB)" transform="rotate(6 78.9 112.1)"/>
+    <ellipse cx="101.9" cy="92.7"  rx="21" ry="16.5" fill="url(#stoneC)" transform="rotate(-4 101.9 92.7)"/>
+    <ellipse cx="133.1" cy="76.5"  rx="24" ry="18.5" fill="url(#stoneA)" transform="rotate(10 133.1 76.5)"/>
+    <ellipse cx="170.9" cy="64.2"  rx="15" ry="12.5" fill="url(#stoneB)" transform="rotate(-6 170.9 64.2)"/>
+    <ellipse cx="213.2" cy="56.6"  rx="18" ry="14.5" fill="url(#stoneC)" transform="rotate(5 213.2 56.6)"/>
+    <ellipse cx="258"   cy="54"    rx="21" ry="16.5" fill="url(#stoneA)"/>
+    <ellipse cx="302.8" cy="56.6"  rx="24" ry="18.5" fill="url(#stoneB)" transform="rotate(-5 302.8 56.6)"/>
+    <ellipse cx="345.1" cy="64.2"  rx="15" ry="12.5" fill="url(#stoneC)" transform="rotate(7 345.1 64.2)"/>
+    <ellipse cx="382.9" cy="76.5"  rx="18" ry="14.5" fill="url(#stoneA)" transform="rotate(-9 382.9 76.5)"/>
+    <ellipse cx="414.1" cy="92.7"  rx="21" ry="16.5" fill="url(#stoneB)" transform="rotate(4 414.1 92.7)"/>
+    <ellipse cx="437.1" cy="112.1" rx="24" ry="18.5" fill="url(#stoneC)" transform="rotate(-6 437.1 112.1)"/>
+    <ellipse cx="450.5" cy="133.6" rx="15" ry="12.5" fill="url(#stoneA)" transform="rotate(8 450.5 133.6)"/>
+  </g>
+
+  <!-- 불턱 돌담 — 앞쪽(바깥쪽) 작은 돌 7개, 살짝 아래로 겹쳐 이중 벽 느낌 -->
+  <g>
+    <ellipse cx="104"   cy="159.3" rx="13" ry="10.5" fill="url(#stoneB)" transform="rotate(5 104 159.3)"/>
+    <ellipse cx="133.1" cy="126.6" rx="19" ry="15"   fill="url(#stoneC)" transform="rotate(-7 133.1 126.6)"/>
+    <ellipse cx="188.3" cy="103.8" rx="16" ry="13"   fill="url(#stoneA)" transform="rotate(6 188.3 103.8)"/>
+    <ellipse cx="258"   cy="95.6"  rx="13" ry="10.5" fill="url(#stoneB)"/>
+    <ellipse cx="327.7" cy="103.8" rx="19" ry="15"   fill="url(#stoneC)" transform="rotate(-5 327.7 103.8)"/>
+    <ellipse cx="382.9" cy="126.6" rx="16" ry="13"   fill="url(#stoneA)" transform="rotate(8 382.9 126.6)"/>
+    <ellipse cx="412"   cy="159.3" rx="13" ry="10.5" fill="url(#stoneB)" transform="rotate(-6 412 159.3)"/>
+  </g>
+
+  <!-- 화덕 구덩이 -->
+  <ellipse cx="244" cy="116" rx="48" ry="15" fill="#131618"/>
+  <!-- 화덕 테두리 조약돌 — 구덩이 가장자리를 두르는 작은 돌 -->
+  <g>
+    <ellipse cx="200" cy="118" rx="8" ry="6.5" fill="url(#pebble)"/>
+    <ellipse cx="216" cy="129" rx="7" ry="5.5" fill="url(#pebble)"/>
+    <ellipse cx="244" cy="133" rx="8" ry="6"   fill="url(#pebble)"/>
+    <ellipse cx="272" cy="129" rx="7" ry="5.5" fill="url(#pebble)"/>
+    <ellipse cx="288" cy="118" rx="8" ry="6.5" fill="url(#pebble)"/>
+  </g>
+  <!-- 장작 -->
+  <g stroke="#463228" stroke-width="7" stroke-linecap="round">
+    <line x1="214" y1="114" x2="270" y2="104"/>
+    <line x1="220" y1="102" x2="274" y2="114"/>
+  </g>
+</svg>
