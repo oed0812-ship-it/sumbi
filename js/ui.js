@@ -92,16 +92,15 @@ var UI = (function () {
   }
 
   /* ── 수심 눈금자 — 바당마다 최대 수심이 달라서 진입할 때 한 번만 다시 그린다.
-     0m(위) ~ 이 바당의 최대 수심(아래) 사이를 4등분해 눈금 5개를 찍는다.
-     마커 위치·숫자는 매 프레임 tick() 이 갱신한다. */
+     0m(위) ~ 이 바당의 최대 수심(아래) 사이를 4등분해 눈금선 5개를 찍는다.
+     ★ 눈금마다 붙던 수심 라벨(0m/6m/12m…)은 없앴다 — 실제로 읽는 숫자는
+       '지금 내 수심' 하나뿐이라, 나머지는 시야만 어지럽혔다. 그 숫자는
+       마커(#drDepthTxt)가 들고 다니며 매 프레임 tick() 이 갱신한다. */
   function buildDepthRuler() {
-    var maxD = GAME.G.badang.depthM;
     var el = $('drTicks');
     var html = '';
     for (var i = 0; i <= 4; i++) {
-      var t = i / 4;
-      html += '<div class="drTick" style="top:' + (t * 100) + '%"></div>' +
-              '<div class="drTickLbl" style="top:' + (t * 100) + '%">' + Math.round(maxD * t) + 'm</div>';
+      html += '<div class="drTick" style="top:' + ((i / 4) * 100) + '%"></div>';
     }
     el.innerHTML = html;
   }
@@ -196,8 +195,8 @@ var UI = (function () {
     buildHotspots();
   }
 
-  /* ── 장비 3칸 — 종류당 카드 1장, 카드마다 "업그레이드(₩금액)" 버튼 1개.
-     최대 레벨(3)이면 버튼이 비활성 표시("최대 레벨")로 바뀐다(기존과
+  /* ── 장비 3행 — 종류당 행 1개, 행마다 "업그레이드(₩금액)" 버튼 1개.
+     최대 레벨(3)이면 버튼 자리가 비활성 표시("최대 레벨")로 바뀐다(기존과
      동일한 정책 — 그 이상은 살 수 없다). ── */
   function buildGear() {
     var el = $('gearGrid');
@@ -211,18 +210,18 @@ var UI = (function () {
       var afford = maxed || PROGRESS.money >= price;
 
       var d = document.createElement('div');
-      d.className = 'gcell' + (maxed ? ' owned' : '');
+      d.className = 'grow';
       d.innerHTML =
-        '<span class="lv">Lv' + cur + '</span>' +
-        '<div class="nm">' + g.name + '</div>' +
-        '<div class="ef">' + g.effect[cur - 1] + '</div>' +
-        '<div class="efNext">' + (maxed ? '' : '→ ' + g.effect[nextLv - 1]) + '</div>' +
-        '<button class="gc-btn' + (maxed ? ' maxed' : (afford ? '' : ' poor')) + '">' +
-          (maxed ? '최대 레벨' : '업그레이드 (' + wonText(price) + ')') +
-        '</button>';
+        '<div class="gname">' + g.name + '<span class="lv">Lv' + cur + '</span></div>' +
+        '<div class="gstat">' + g.effect[cur - 1] +
+          (maxed ? '' : '<span class="efNext">→ ' + g.effect[nextLv - 1] + '</span>') +
+        '</div>' +
+        (maxed
+          ? '<div class="g-max">최대 레벨</div>'
+          : '<button class="g-action' + (afford ? '' : ' poor') + '"><span class="cap">업그레이드</span><span class="val">' + wonText(price) + '</span></button>');
       if (!maxed) {
         (function (id, level, cell) {
-          cell.querySelector('.gc-btn').addEventListener('click', function () { tryBuyGear(id, level, cell); });
+          cell.querySelector('.g-action').addEventListener('click', function () { tryBuyGear(id, level, cell); });
         })(g.id, nextLv, d);
       }
       el.appendChild(d);
@@ -296,23 +295,37 @@ var UI = (function () {
       var offset = i - badangIdx;              /* -1(왼쪽) / 0(가운데) / +1(오른쪽) */
       if (Math.abs(offset) > 1) continue;      /* 끝 카드에서는 반대편 카드를 아예 안 그린다 */
 
-      var c = document.createElement('button');
+      /* ★ 가운데(active) 카드 안에 '선택' 버튼이 들어가므로, 버튼을 품을 수
+         있도록 카드 자체는 <button>이 아니라 <div>다 — 옆 카드는 여전히
+         카드 전체 클릭으로 가운데로 넘어온다(아래 이벤트 참고). */
+      var c = document.createElement('div');
       c.className = 'bcard' + (open ? '' : ' locked') + (offset === 0 ? ' active' : ' side');
       c.style.zIndex = offset === 0 ? 3 : 1;
-      c.style.transform = 'translate(calc(-50% + ' + (offset * 100) + 'px), -50%) scale(' + (offset === 0 ? 1 : 0.8) + ')';
+      c.style.transform = 'translate(calc(-50% + ' + (offset * 104) + 'px), -50%) scale(' + (offset === 0 ? 1 : 0.8) + ')';
+      /* ★ 수심은 카드 제목 옆에 따로 보여준다 — desc 앞머리의 "20m · "는
+         그래서 중복이라 떼어낸다(데이터는 그대로 두고 표시할 때만). */
+      var descBody = b.desc.replace(/^\s*\d+m\s*·\s*/, '');
       c.innerHTML =
         (open ? '' : '<span class="lk"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#e5b25d" stroke-width="1.4"><rect x="2.5" y="6" width="9" height="6.5" rx="1.4"/><path d="M4.6 6V4.2a2.4 2.4 0 0 1 4.8 0V6"/></svg></span>') +
-        '<div class="bn">' + b.name + '</div>' +
-        '<div class="bd">' + b.desc + '</div>' +
-        '<div class="bt">' + (open ? b.tag : b.lockText) + '</div>';
-      (function (bb, isOpen, off) {
-        c.addEventListener('click', function () {
-          if (off !== 0) { badangIdx += off; buildBadang(); return; }   /* 옆 카드를 누르면 가운데로 */
-          AUDIO.sfx('ui');
-          if (!isOpen) { toast(LINES.locked); return; }
-          enterDive(bb.id);
-        });
-      })(b, open, offset);
+        '<div class="bn">' + b.name + '<span class="bdep">' + b.depthM + 'm</span></div>' +
+        '<div class="bcRule"></div>' +
+        '<div class="bd">' + descBody + '</div>' +
+        '<div class="bt">' + (open ? b.tag : b.lockText) + '</div>' +
+        (offset === 0 ? '<button class="bcSelect' + (open ? '' : ' locked') + '">선택</button>' : '');
+      (function (bb, isOpen, off, card) {
+        if (off !== 0) {
+          /* 옆 카드 — 클릭하면 가운데로 넘어온다 */
+          card.addEventListener('click', function () { badangIdx += off; buildBadang(); });
+        } else {
+          /* 가운데 카드 — 다이빙 입수는 '선택' 버튼으로만 */
+          var sel = card.querySelector('.bcSelect');
+          sel.addEventListener('click', function () {
+            AUDIO.sfx('ui');
+            if (!isOpen) { toast(LINES.locked); return; }
+            enterDive(bb.id);
+          });
+        }
+      })(b, open, offset, c);
       stage.appendChild(c);
     }
     $('bcPrev').disabled = badangIdx <= 0;
@@ -400,7 +413,8 @@ var UI = (function () {
     var h = HOME_BY_ID[openId];
     var afford = PROGRESS.money >= h.price;
     $('homeCardName').textContent = h.name;
-    $('homeCardPrice').textContent = numText(h.price);
+    /* 가격은 별도 줄이 아니라 구매 버튼 안에 — 장비 '업그레이드' 버튼과 같은 형식 */
+    $('homeCardBuy').innerHTML = '<span class="cap">구매</span><span class="val">' + wonText(h.price) + '</span>';
     $('homeCardShort').style.display = afford ? 'none' : 'block';
     $('homeCardShort').textContent = afford ? '' : (numText(h.price - PROGRESS.money) + ' 부족');
     $('homeCardBuy').disabled = !afford;
@@ -464,6 +478,8 @@ var UI = (function () {
     var un = b ? b.name + ' 해금' : '';
     if (r.grantLantern) un += (un ? ' · ' : '') + '랜턴 지급 — ' + LINES.lanternGift;
     $('rankUnlock').textContent = un;
+    /* ★ 승급으로 새 바다가 열리면 캐러셀 기본 선택도 그 바다로 옮긴다 */
+    if (b) badangIdx = r.unlock;
     overlay('ovRank', true);
     AUDIO.sfx('rank');
     refreshBulteok();
@@ -737,7 +753,6 @@ var UI = (function () {
 
     var t = Math.max(0, G.tide);
     $('tideT').textContent = Math.floor(t / 60) + ':' + ('0' + Math.floor(t % 60)).slice(-2);
-    $('badangT').textContent = G.badang.name;
 
     /* 수심 눈금자 — 0(수면)~이 바당 최대 수심 사이의 비율로 마커를 내린다 */
     var dRatio = clamp(GAME.depthM() / G.badang.depthM, 0, 1);
@@ -1129,13 +1144,11 @@ var UI = (function () {
     }
     $('homeCardBuy').addEventListener('click', buyHomeFromCard);   /* AUDIO.sfx('upgrade') 는 구매 성공시 직접 재생 */
 
-    /* 모바일 상승 / 방출 */
-    var ab = $('btnAscend'), rb = $('btnRelease');
-    ab.addEventListener('pointerdown', function (e) { e.preventDefault(); INPUT.setAscend(true); });
-    ab.addEventListener('pointerup',   function () { INPUT.setAscend(false); });
-    ab.addEventListener('pointercancel', function () { INPUT.setAscend(false); });
-    ab.addEventListener('pointerleave', function () { INPUT.setAscend(false); });
-    rb.addEventListener('pointerdown', function (e) { e.preventDefault(); INPUT.requestRelease(); });
+    /* 방출 — PC·모바일 공통 좌하단 아이콘 버튼.
+       상승 버튼은 없앴다(PC 는 Space, 모바일은 위로 드래그). */
+    $('btnLetout').addEventListener('pointerdown', function (e) {
+      e.preventDefault(); INPUT.requestRelease();
+    });
 
     /* 설정 */
     $('sVolM').addEventListener('input', function () { SETTINGS.volMaster = +this.value; applySettings(); });

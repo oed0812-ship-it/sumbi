@@ -986,6 +986,55 @@ var RENDER = (function () {
     if (!ghostCv) { ghostCv = document.createElement('canvas'); ghostCtx = ghostCv.getContext('2d'); }
     if (ghostCv.width !== w || ghostCv.height !== h) { ghostCv.width = w; ghostCv.height = h; }
   }
+
+  /* 테왁 몸체 — underCv(원본, 물결선 아래용)와 drawTewakSurfaceBlend(고스트,
+     물결선 위용) 양쪽에서 같은 모양을 쓰기 위해 분리했다. */
+  function drawTewakShape(g, x, y) {
+    g.fillStyle = 'rgba(120,180,190,0.30)';
+    g.beginPath(); g.ellipse(x, y + 6, CONFIG.TEWAK_RADIUS*1.15, CONFIG.TEWAK_RADIUS*0.42, 0, 0, 6.2832); g.fill();
+    g.fillStyle = rgb(COL.tewak);
+    g.beginPath(); g.arc(x, y, CONFIG.TEWAK_RADIUS, 0, 6.2832); g.fill();
+    g.fillStyle = 'rgba(224,122,60,0.9)';
+    g.beginPath(); g.arc(x, y, CONFIG.TEWAK_RADIUS * 0.42, 0, 6.2832); g.fill();
+  }
+
+  /* ★ 테왁도 해녀와 같은 이유로 물결 트로프에서 잘린다(위 drawDiverSurfaceBlend
+     주석 참조) — 같은 방식으로 고스트 캔버스에 다시 그려 물결선 기준으로
+     이어붙인다. 물결선 위는 이 레이어가 그대로 보이고, 아래로는 FEATHER
+     만큼 서서히 사라져 이미 보이는 underCv 원본과 자연스럽게 이어진다. */
+  var tewakGhostCv = null, tewakGhostCtx = null;
+  function ensureTewakGhostCanvas(w, h) {
+    if (!tewakGhostCv) { tewakGhostCv = document.createElement('canvas'); tewakGhostCtx = tewakGhostCv.getContext('2d'); }
+    if (tewakGhostCv.width !== w || tewakGhostCv.height !== h) { tewakGhostCv.width = w; tewakGhostCv.height = h; }
+  }
+  function drawTewakSurfaceBlend(cam, surf, twy) {
+    var ps = w2s(cam, CONFIG.TEWAK_X, twy);
+    if (ps.x < -80 || ps.x > W + 80) return;
+    var waveY = waveScreenY(cam, surf, ps.x);
+
+    var feather = 30 * cam.zoom;
+    var pad = CONFIG.TEWAK_RADIUS * 1.5 * cam.zoom + feather;
+    var cw = Math.ceil(pad * 2), ch = Math.ceil(pad * 2);
+    ensureTewakGhostCanvas(Math.ceil(cw * DPR), Math.ceil(ch * DPR));
+    tewakGhostCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    tewakGhostCtx.clearRect(0, 0, cw, ch);
+    tewakGhostCtx.save();
+    tewakGhostCtx.translate(pad, pad);
+    tewakGhostCtx.scale(cam.zoom, cam.zoom);
+    drawTewakShape(tewakGhostCtx, 0, 0);
+    tewakGhostCtx.restore();
+
+    var localWaveY = pad + (waveY - ps.y);
+    tewakGhostCtx.globalCompositeOperation = 'destination-in';
+    var grad = tewakGhostCtx.createLinearGradient(0, localWaveY, 0, localWaveY + feather);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    tewakGhostCtx.fillStyle = grad;
+    tewakGhostCtx.fillRect(0, 0, cw, ch);
+    tewakGhostCtx.globalCompositeOperation = 'source-over';
+
+    ctx.drawImage(tewakGhostCv, ps.x - pad, ps.y - pad, cw, ch);
+  }
   function drawDiverSurfaceBlend(cam, G, surf) {
     var P = G.player;
     if (P.y > 90) return;   /* 물결이 닿을 수 있는 범위 밖이면 필요 없다 */
@@ -1322,14 +1371,14 @@ var RENDER = (function () {
       ctx.globalAlpha = 1;
     }
 
-    /* ── 테왁 — 수면의 세이브 포인트 ── */
+    /* ── 테왁 — 수면의 세이브 포인트 ──
+       ★ 몸체는 drawTewakShape() 로 분리했다 — 물결이 골로 내려오면 근수면선
+       클립(compositeUnderwater)에 위쪽이 잘려 보이던 문제를, 해녀와 같은
+       방식(drawTewakSurfaceBlend, 아래)으로 고스트 캔버스에 다시 그려
+       물결선 기준으로 이어붙인다. 여기 underCv 위의 원본은 물결선 아래
+       구간(고스트가 페이드아웃되는 영역)을 위해 그대로 남겨둔다. */
     var twy = Math.sin(T * 1.3) * 4;
-    ctx.fillStyle = 'rgba(120,180,190,0.30)';
-    ctx.beginPath(); ctx.ellipse(CONFIG.TEWAK_X, twy + 6, CONFIG.TEWAK_RADIUS*1.15, CONFIG.TEWAK_RADIUS*0.42, 0, 0, 6.2832); ctx.fill();
-    ctx.fillStyle = rgb(COL.tewak);
-    ctx.beginPath(); ctx.arc(CONFIG.TEWAK_X, twy, CONFIG.TEWAK_RADIUS, 0, 6.2832); ctx.fill();
-    ctx.fillStyle = 'rgba(224,122,60,0.9)';
-    ctx.beginPath(); ctx.arc(CONFIG.TEWAK_X, twy, CONFIG.TEWAK_RADIUS * 0.42, 0, 6.2832); ctx.fill();
+    drawTewakShape(ctx, CONFIG.TEWAK_X, twy);
     /* 물속에서도 테왁 위치가 읽히도록 얇은 수직선 */
     if (P.y > 140) {
       ctx.strokeStyle = 'rgba(220,240,246,0.12)'; ctx.lineWidth = 1.5;
@@ -1485,6 +1534,7 @@ var RENDER = (function () {
 
     /* ★ 수면 근처에서 물결선 기준 그라디언트로 자연스럽게 이어붙인다 (끊김 없음) */
     drawDiverSurfaceBlend(cam, G, surf);
+    drawTewakSurfaceBlend(cam, surf, twy);
 
     /* 5) 동료 해녀 실루엣 — 수면 위에 떠 있으므로 합성 이후에 그려야
        물/굴절에 가리지 않는다. "혼자가 아니다"가 시각으로 전달되어야 한다.
@@ -1601,12 +1651,10 @@ var RENDER = (function () {
       if (p.x < -60 || p.x > W + 60) continue;
       var s = 26 * cam.zoom;
       var bobY = Math.sin(T * 1.1 + i * 2.1) * 3 * cam.zoom;
-      ctx.fillStyle = 'rgba(226,234,236,0.85)';
+      ctx.fillStyle = 'rgba(224,122,60,0.85)';
       ctx.beginPath(); ctx.arc(p.x, p.y - s*0.1 + bobY, s*0.42, 0, 6.2832); ctx.fill();
       ctx.fillStyle = rgba(COL.ally, 0.9);
       ctx.beginPath(); ctx.arc(p.x + s*0.34, p.y - s*0.42 + bobY, s*0.22, 0, 6.2832); ctx.fill();
-      ctx.fillStyle = 'rgba(16,28,36,0.55)';
-      ctx.beginPath(); ctx.ellipse(p.x, p.y + s*0.16 + bobY, s*0.5, s*0.16, 0, 0, 6.2832); ctx.fill();
     }
   }
 

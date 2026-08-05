@@ -96,21 +96,22 @@ body.portrait #rotate{display:flex}
 .btn{
   position:relative;overflow:hidden;
   padding:11px 20px;border-radius:9px;font-size:15px;font-weight:600;letter-spacing:.02em;
-  background:linear-gradient(180deg,#3d454a,#262c30);
-  border:1px solid rgba(255,255,255,.10);
+  background-image:url('assets/ui/btn_stone_light.png');
+  background-size:100% 100%;background-position:center;background-repeat:no-repeat;
+  border:0;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.13), inset 0 -2px 5px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.45);
   transition:transform .08s ease, box-shadow .16s ease, filter .2s ease;
 }
 .btn:hover{filter:brightness(1.13)}
-.btn:active{transform:translateY(1px);box-shadow:inset 0 3px 8px rgba(0,0,0,.6)}
+.btn:active{transform:translateY(1px);box-shadow:inset 0 3px 8px rgba(0,0,0,.6);background-image:url('assets/ui/btn_stone_light_pressed.png')}
 .btn:disabled{opacity:.38;cursor:default;filter:none}
 .btn.primary{
-  background:linear-gradient(180deg,#3f6f78,#22454e);
-  border-color:rgba(140,220,235,.24);
+  background-image:url('assets/ui/btn_stone_dark.png');
   color:#eaf9fc;
 }
-.btn.gold{background:linear-gradient(180deg,#7a5f2c,#4a3818);border-color:rgba(229,178,93,.30);color:#f6e6c2}
-.btn.ghost{background:linear-gradient(180deg,#31383c,#20262a);font-weight:500}
+.btn.primary:active{background-image:url('assets/ui/btn_stone_dark_pressed.png')}
+.btn.gold{background:linear-gradient(180deg,#7a5f2c,#4a3818);color:#f6e6c2}
+.btn.ghost{background-image:url('assets/ui/btn_stone_light.png');font-weight:500}
 .btn.sm{padding:7px 13px;font-size:13px;border-radius:7px}
 /* 젖은 손 — 짧게 반짝이면 이펙트지만, 마르는 시간이 있어야 '손이 젖어 있다'가 된다 */
 .btn::after{
@@ -161,11 +162,24 @@ body.portrait #rotate{display:flex}
 /* 수면 근처는 물이 밝아 흰 글씨가 날아간다. 그림자로 대비를 만든다 */
 #hud, #hud *{text-shadow:0 1px 3px rgba(4,12,18,.85), 0 0 10px rgba(4,12,18,.55)}
 
-/* ★ 좌측 세로 스택 — 바다이름 → 타이머 시계 → kg·개수 → 숨 게이지 순서 */
+/* ★ 좌측 세로 스택 — 타이머 시계 → kg·개수 → 숨 게이지 순서
+   (장소명은 표기하지 않는다 — 어느 바당인지는 들어올 때 이미 알고 들어온다) */
 #leftHud{position:absolute;left:18px;top:16px;display:flex;flex-direction:column;gap:16px}
 
-#tideT{font-size:25px;font-weight:700;letter-spacing:.03em}
-#badangT{margin-bottom:2px;font-size:11.5px;color:var(--ink-dim)}
+/* ★ 타이머·무게 뒤 방사형 딤 — 수면 근처의 밝은 물 위에서 흰 글씨가 날아가는
+   것을 막는다. 사각 패널을 깔면 HUD 가 무거워지므로, 가장자리가 완전히
+   사라지는 원형 그라디언트로 글자 주변만 은근히 눌러 준다. */
+#hudDimTop{
+  position:absolute;left:-92px;top:-104px;width:324px;height:304px;pointer-events:none;
+  /* ★ closest-side — 기본값(farthest-corner)이면 그라디언트 원이 박스보다
+     커져서 좌우 끝에 알파가 남고, 그 자리에 사각형 경계선이 드러난다.
+     가장 가까운 변을 100% 로 잡아야 사방이 확실히 투명하게 끝난다. */
+  background:radial-gradient(circle closest-side at 50% 50%,
+    rgba(4,12,18,.46) 0%, rgba(4,12,18,.34) 26%, rgba(4,12,18,.19) 46%,
+    rgba(4,12,18,.08) 66%, rgba(4,12,18,.02) 82%, rgba(4,12,18,0) 100%);
+}
+
+#tideT{font-size:38px;font-weight:700;letter-spacing:.03em;line-height:1.05}
 
 /* ★ 무게 게이지(막대) 삭제 — kg 숫자와 개수 텍스트만 남는다 */
 #bagWrap{display:flex;flex-direction:column;gap:5px}
@@ -173,7 +187,13 @@ body.portrait #rotate{display:flex}
 #bagKg small{font-size:11px;font-weight:500;color:var(--ink-dim)}
 #bagCnt{font-size:11px;color:var(--ink-dim)}
 
-#o2Wrap{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+/* ★ 숨 게이지 — 막대 디자인은 그대로 두고, 뒤에 반투명 라운드 사각형만
+   깔아 아래 숫자(#o2Txt)가 밝은 물 위에서도 읽히게 한다. */
+#o2Wrap{
+  display:flex;flex-direction:column;gap:6px;align-items:center;
+  align-self:flex-start;padding:9px 8px 8px;border-radius:13px;
+  background:rgba(6,16,20,.20);
+}
 #o2Bar{
   position:relative;width:15px;height:150px;border-radius:8px;overflow:hidden;
   background:rgba(6,16,20,.62);border:1px solid rgba(255,255,255,.15);
@@ -184,51 +204,48 @@ body.portrait #rotate{display:flex}
   position:absolute;left:0;right:0;height:2px;background:rgba(255,196,120,.85);
   box-shadow:0 0 5px rgba(255,180,90,.9);
 }
-#o2Txt{font-size:11px;color:#bcd8e0;width:34px}
+#o2Txt{font-size:11px;color:#bcd8e0;text-align:center}
 
-/* ★ 수심 눈금자 — 우측, 화면 높이에 맞춰 길게. 0m 이 위 · 이 바당의
-   최대 수심이 아래. 마커(#drMarker)가 현재 수심 비율만큼 top%로
-   내려온다(내부 레이아웃이 비율 기반이라 세로로 늘려도 그대로 맞는다). */
-#depthRuler{position:absolute;right:19px;top:16px;bottom:40px;width:60px}
-#drTrack{position:absolute;left:5px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.28);border-radius:2px}
-.drTick{position:absolute;left:0;width:11px;height:1px;background:rgba(255,255,255,.4)}
-.drTickLbl{position:absolute;left:14px;font-size:9px;color:var(--ink-dim);transform:translateY(-50%);white-space:nowrap}
-#drMarker{position:absolute;left:0;top:0;display:flex;align-items:center;gap:4px;transform:translateY(-50%)}
-#drMarker .tri{width:0;height:0;flex:none;
+/* ★ 수심 눈금자 — 화면 오른쪽 가장자리에 바짝 붙인다. 눈금선은 남기되
+   눈금마다 붙던 수심 라벨은 없앴다(읽을 일이 없는 숫자가 4개나 서 있었다).
+   숫자는 현재 수심 하나뿐이고, 마커(#drMarker)가 현재 수심 비율만큼
+   top% 로 내려오면서 그 숫자를 데리고 다닌다. */
+#depthRuler{position:absolute;right:10px;top:16px;bottom:40px;width:74px}
+#drTrack{position:absolute;right:0;top:0;bottom:0;width:2px;background:rgba(255,255,255,.28);border-radius:2px}
+.drTick{position:absolute;right:0;width:9px;height:1px;background:rgba(255,255,255,.4)}
+/* 텍스트가 왼쪽, 삼각형이 오른쪽 — 삼각형이 오른쪽 눈금선을 가리킨다 */
+#drMarker{position:absolute;right:4px;top:0;display:flex;align-items:center;gap:4px;transform:translateY(-50%)}
+#drMarker .tri{width:0;height:0;flex:none;order:2;
   border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #7fe3f0}
 #drDepthTxt{font-size:11.5px;font-weight:700;color:#dff2f8;white-space:nowrap}
 
-/* 모바일 버튼 */
-#touchBtns{position:absolute;inset:0;display:none}
-body.touch #touchBtns{display:block}
-.tbtn{
-  position:absolute;bottom:22px;width:88px;height:88px;border-radius:50%;
-  background:rgba(28,42,50,.5);border:2px solid rgba(190,232,244,.34);
-  color:#dff2f8;font-size:13px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;
-  backdrop-filter:blur(2px);
+/* ★ 방출 — 예전엔 body.touch 에서만 보이는 원형 버튼이었는데, 부모(#hud)가
+   pointer-events:none 이라 정작 눌러도 반응하지 않았다. 이제 PC·모바일 모두
+   좌하단 아이콘 버튼 하나로 통일하고 pointer-events 를 되살렸다.
+   (상승 버튼은 삭제 — PC 는 Space, 모바일은 위로 드래그로 충분하다) */
+#btnLetout{
+  position:absolute;left:18px;bottom:18px;
+  width:46px;height:46px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(10,22,28,.42);border:1px solid rgba(190,232,244,.28);
+  cursor:pointer;pointer-events:auto;
+  transition:background .15s ease, transform .08s ease;
 }
-.tbtn:active{background:rgba(60,110,128,.62)}
-#btnAscend{right:22px}
-#btnRelease{left:22px;width:70px;height:70px;font-size:12px;bottom:30px}
-.tbtn .ar{font-size:19px;line-height:1}
-
-/* 잠수 좌하단 안내 (PC) */
-#diveHint{position:absolute;left:18px;bottom:14px;font-size:11.5px;color:#6d868f;letter-spacing:.01em}
-body.touch #diveHint{display:none}
+#btnLetout img{width:24px;height:24px;display:block;opacity:.92}
+#btnLetout:hover{background:rgba(30,60,74,.6)}
+#btnLetout:active{transform:translateY(1px);background:rgba(60,110,128,.68)}
 
 /* ============================================================
    불턱 (허브)
    ============================================================ */
 #scr-bulteok{}
 #bkTop{
-  position:absolute;left:0;right:0;top:0;height:46px;
-  display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  position:absolute;left:0;right:0;top:0;height:56px;
+  display:flex;align-items:center;gap:14px;padding:0 16px;
   background:linear-gradient(180deg,rgba(8,12,14,.82),rgba(8,12,14,0));
 }
-/* '물질 n일째' — hubBtns 가 있던 좌측 상단(장비 패널과 같은 top) 자리 */
-#bkDay{position:absolute;left:16px;top:56px;font-size:15px;font-weight:600;letter-spacing:.02em}
-#bkRight{text-align:right;line-height:1.35}
+/* '물질 n일째' — 이제 아이콘 버튼들과 같은 줄(#bkTop)에 나란히 있다 */
+#bkDay{font-size:15px;font-weight:600;letter-spacing:.02em}
 #bkMoney{font-size:16px;font-weight:700;color:#f0d49a}
 .dots{display:inline-flex;gap:3px}
 .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);display:block}
@@ -253,87 +270,141 @@ body.touch #diveHint{display:none}
 @keyframes glossKnown {0%,100%{opacity:.34}50%{opacity:.6}}
 @keyframes glossHigh  {0%,100%{opacity:.55}50%{opacity:1}}
 
+/* ★ 우측 UI 뒤 딤 — 불턱 배경(노을·바다) 위로 장비/바당 패널의 글자가
+   묻히지 않도록 오른쪽으로 갈수록 짙어지는 그라디언트를 한 겹 깐다.
+   패널보다 뒤(#scr-bulteok 의 첫 자식)에 있고 클릭은 통과시킨다. */
+#bkDim{
+  position:absolute;right:0;top:0;bottom:0;width:560px;pointer-events:none;
+  /* ★ 중간 정지점 — 최대 농도(.6)에 40% 지점에서 이미 도달하고 오른쪽 끝까지
+     그대로 유지한다. 시작~끝을 그냥 잇는 단순 2색 그라디언트는 패널 글자가
+     걸리는 구간이 아직 옅어서 가독성이 떨어졌다. */
+  background:linear-gradient(90deg,rgba(13,17,22,0) 0%,rgba(13,17,22,.6) 40%,rgba(13,17,22,.6) 100%);
+}
+
 /* 살림 구매 카드 — 모달 아님. 화면을 가리지 않는 작은 팝오버 */
 #homeCard{
   position:absolute;z-index:4;display:none;
-  transform:translate(-50%,-100%);padding:10px 14px 11px;min-width:150px;text-align:center;
+  transform:translate(-50%,-100%);padding:16px 22px 18px;min-width:212px;text-align:center;
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(40,46,54,.94),rgba(24,29,35,.96));
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 14px 36px rgba(0,0,0,.55);
 }
 #homeCard.on{display:block}
-#homeCard::after{
-  content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);
-  border:7px solid transparent;border-top-color:#2a2e31;
-}
-#homeCardName{font-size:13.5px;font-weight:700;color:#f0dcae;white-space:nowrap}
-#homeCardPrice{font-size:12.5px;color:#e0c48d;margin-top:2px}
-#homeCardShort{font-size:10.5px;color:var(--warn);margin-top:2px;display:none}
-#homeCard .btn{width:100%;margin-top:8px}
+#homeCardName{font-size:19px;font-weight:700;color:#f2e7d2;white-space:nowrap;letter-spacing:.04em}
+#homeCardShort{font-size:11px;color:var(--warn);margin-top:7px;display:none}
+#homeCard .g-action{width:100%;margin-top:14px;padding:10px 12px}
 
-/* 장비 3칸 — 종류당 카드 1장, 카드마다 업그레이드 버튼 1개 */
-#gearPanel{position:absolute;right:16px;top:56px;width:404px;padding:14px 15px 15px}
-#gearPanel h3{font-size:13px;letter-spacing:.1em;color:var(--ink-dim);font-weight:600;margin-bottom:11px}
-.gear-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.gcell{
-  position:relative;padding:12px 10px 11px;border-radius:10px;text-align:center;
-  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);
-  display:flex;flex-direction:column;align-items:center;
+/* 장비 — 세로 리스트. 칸마다 이름·Lv / 현재→다음 스탯 / 액션(업그레이드·최대 레벨) */
+#gearPanel{position:absolute;right:16px;top:16px;width:420px}
+#gearHead{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.12);
 }
-.gcell.owned{border-color:rgba(127,201,160,.34);background:rgba(127,201,160,.07)}
-.gcell .lv{position:absolute;left:8px;top:6px;font-size:9.5px;color:var(--ink-dim);letter-spacing:.06em}
-.gcell .nm{font-size:14px;font-weight:700;margin-top:6px}
-.gcell .ef{font-size:11px;color:#dfe9ec;margin-top:7px}
-.gcell .efNext{font-size:10.5px;color:#9fbcc4;margin-top:3px;min-height:14px}
-.gcell .gc-btn{
-  margin-top:10px;width:100%;padding:8px 6px;border-radius:7px;font-size:11.5px;font-weight:700;
-  background:linear-gradient(180deg,#7a5f2c,#4a3818);border:1px solid rgba(229,178,93,.30);color:#f6e6c2;
+#gearHead h3{font-size:15px;font-weight:700;letter-spacing:.03em;color:var(--ink)}
+.gear-list{display:flex;flex-direction:column}
+.grow{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08);
+}
+.grow:last-child{border-bottom:0}
+.grow .gname{flex:none;font-size:16px;font-weight:700;white-space:nowrap}
+.grow .gname .lv{font-size:11.5px;font-weight:500;color:var(--ink-dim);margin-left:5px}
+.grow .gstat{flex:1;font-size:12.5px;color:#c3d3d8;line-height:1.5;min-width:0}
+.grow .gstat .efNext{display:block;color:var(--gold)}
+.g-action{
+  flex:none;min-width:104px;padding:9px 12px;border-radius:9px;text-align:center;
+  background:linear-gradient(180deg,rgba(95,179,196,.30),rgba(95,179,196,.15));
+  border:1px solid rgba(95,179,196,.42);color:#e3f6fa;
+  font-size:13.5px;font-weight:700;
   cursor:pointer;transition:filter .15s;
 }
-.gcell .gc-btn:hover{filter:brightness(1.15)}
-.gcell .gc-btn.poor{opacity:.5}
-.gcell .gc-btn.maxed{
-  background:rgba(127,201,160,.16);border-color:rgba(127,201,160,.3);color:var(--ok);
-  cursor:default;opacity:.85;
+.g-action:hover{filter:brightness(1.15)}
+.g-action.poor,.g-action:disabled{opacity:.5;cursor:default}
+.g-action .cap{display:block;font-size:10px;color:#a9dbe4;opacity:.9}
+.g-action .val{display:block;font-size:13.5px;font-weight:700;margin-top:2px}
+.g-max{
+  flex:none;min-width:104px;padding:9px 12px;border-radius:9px;text-align:center;
+  background:rgba(255,255,255,.05);color:var(--ink-dim);font-size:12px;
 }
-#gearNote{margin-top:10px;font-size:11px;color:#7d949c;line-height:1.5}
+#gearNote{margin-top:12px;font-size:11px;color:#7d949c;line-height:1.5}
 
 /* 바당 카드 캐러셀 — 장비 패널 바로 아래, 같은 우측 폭.
    가운데(선택) 카드는 크게, 양옆은 뒤로 살짝 빠져 겹쳐 보인다. */
-#badangBar{position:absolute;right:16px;top:330px;width:404px;padding:12px 15px 14px}
-#badangBar h3{font-size:13px;letter-spacing:.1em;color:var(--ink-dim);font-weight:600;margin-bottom:9px}
-#badangCarousel{display:flex;align-items:center;gap:6px}
-#badangStage{position:relative;flex:1 1 auto;height:112px}
+#badangBar{position:absolute;right:16px;top:338px;width:420px}
+#badangBar h3{font-size:15px;font-weight:700;letter-spacing:.03em;color:var(--ink);margin-bottom:12px;text-align:center}
+#badangCarousel{display:flex;align-items:center;gap:4px}
+#badangStage{position:relative;flex:1 1 auto;height:186px}
+/* 화살표 — 카드 바깥의 얇은 꺾쇠. 상자(배경·테두리) 없이 글리프만 */
 .bcArrow{
-  width:24px;height:48px;flex:none;border-radius:8px;
-  background:linear-gradient(180deg,#3d454a,#262c30);
-  border:1px solid rgba(255,255,255,.1);color:#dfe9ec;font-size:17px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 2px 6px rgba(0,0,0,.4);
-  cursor:pointer;transition:opacity .15s,filter .15s,transform .08s;
+  width:26px;height:56px;flex:none;
+  background:none;border:0;color:#dfe9ec;font-size:26px;line-height:1;
+  cursor:pointer;transition:opacity .15s,transform .08s;opacity:.75;
 }
-.bcArrow:hover{filter:brightness(1.15)}
+.bcArrow:hover{opacity:1}
 .bcArrow:active{transform:translateY(1px)}
-.bcArrow:disabled{opacity:.22;cursor:default;pointer-events:none}
+.bcArrow:disabled{opacity:.18;cursor:default;pointer-events:none}
 
+/* ★ min-height 는 옆 카드가 "납작해지지 않게" 하는 장치다 — 옆 카드는 설명·
+   버튼을 숨기므로 그냥 두면 이름 한 줄 높이(50px)까지 접혀서, scale 을 아무리
+   키워도 선택 카드 옆의 얇은 띠처럼 보인다. 선택 카드의 자연 높이와 같은
+   값을 바닥으로 깔아 두면 두 카드가 같은 상자가 되고, 크기 차이는 오로지
+   scale(선택 1 : 옆 0.8)만으로 결정된다. */
 .bcard{
-  position:absolute;left:50%;top:50%;width:160px;padding:9px 13px 10px;border-radius:10px;text-align:left;
-  background:linear-gradient(165deg,rgba(58,84,94,.88),rgba(22,36,43,.92));
-  border:1px solid rgba(255,255,255,.1);
+  position:absolute;left:50%;top:50%;width:180px;min-height:155px;
+  padding:15px 16px 16px;border-radius:12px;text-align:center;
+  background:linear-gradient(180deg,rgba(32,60,95,.94),rgba(20,38,62,.96));
+  border:1px solid rgba(122,170,214,.38);
   transition:transform .22s ease, opacity .22s ease, box-shadow .16s, border-color .16s;
   touch-action:pan-y;
 }
-.bcard.active{z-index:3;box-shadow:0 10px 26px rgba(0,0,0,.5)}
-.bcard.active:hover:not(.locked){border-color:rgba(150,225,240,.55)}
-.bcard.side{z-index:1;opacity:.5;filter:brightness(.6)}
-.bcard.side .bd,.bcard.side .bt{display:none}   /* 옆으로 빠진 카드는 이름만 — 잘린 설명 텍스트가 안 보이게 */
-.bcard .bn{font-size:15px;font-weight:700;letter-spacing:.03em}
-.bcard .bd{font-size:11px;color:#a6c4cd;margin-top:4px}
-.bcard .bt{font-size:10.5px;color:#7f9aa4;margin-top:2px}
-.bcard.locked{background:linear-gradient(165deg,rgba(36,42,46,.9),rgba(16,20,23,.94));cursor:default}
-.bcard.locked .bn{color:#7c8b91}
+.bcard.active{z-index:3;box-shadow:0 12px 32px rgba(0,0,0,.55)}
+/* 옆 카드 — 이름만 남으므로 그 이름을 상자 한가운데에 놓는다 */
+.bcard.side{
+  z-index:1;opacity:.55;filter:brightness(.62);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+/* 옆으로 빠진 카드는 이름만 — 잘린 설명 텍스트가 안 보이게 */
+.bcard.side .bd,.bcard.side .bt,.bcard.side .bcRule,.bcard.side .bdep{display:none}
+.bcard .bn{font-size:17px;font-weight:700;letter-spacing:.03em}
+.bcard .bn .bdep{font-size:12px;font-weight:500;color:#9fc4dc;margin-left:8px;letter-spacing:0}
+.bcRule{height:1px;background:rgba(255,255,255,.17);margin:11px 0}
+.bcard .bd{font-size:12.5px;color:#dbe8ee}
+.bcard .bt{font-size:11.5px;color:#7fb0cc;margin-top:8px}
+.bcard.locked{
+  background:linear-gradient(180deg,rgba(33,39,47,.93),rgba(18,23,29,.95));
+  border-color:rgba(255,255,255,.11);cursor:default;
+}
+.bcard.locked .bn{color:#8b979d}
 .bcard.locked .bt{color:var(--gold);opacity:.85}
-.bcard .lk{position:absolute;right:11px;top:10px;opacity:.65}
+.bcard .lk{position:absolute;right:12px;top:12px;opacity:.65}
 
-/* 일지/설정/타이틀 — #bkTop(상단 바) 왼쪽 자리, 이제 flex 자식이라 위치는
-   부모(#bkTop)가 잡아준다 */
-#hubBtns{display:flex;gap:8px}
+/* 바당 확정 버튼 — 카드 자체는 더 이상 클릭 대상이 아니다. 가운데(active)
+   카드에만 렌더링되며, 잠긴 바당이면 무채색으로 눌러도 잠김 안내만 뜬다. */
+.bcSelect{
+  display:block;width:100%;margin-top:14px;padding:10px 0;border-radius:9px;
+  background:linear-gradient(180deg,#e8955c,#c96a30);
+  border:1px solid rgba(255,204,160,.4);
+  color:#fff7ec;font-size:14px;font-weight:700;letter-spacing:.04em;
+  cursor:pointer;transition:filter .15s ease, transform .08s ease;
+}
+.bcSelect:hover{filter:brightness(1.12)}
+.bcSelect:active{transform:translateY(1px)}
+.bcSelect.locked{
+  background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:var(--ink-dim);
+}
+
+/* 타이틀/일지/설정 — 아이콘 버튼 3개. #bkTop(상단 바) 왼쪽 자리 */
+#hubBtns{display:flex;gap:6px;flex:none}
+.icon-btn{
+  width:36px;height:36px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.07);border:0;cursor:pointer;
+  transition:background .15s ease, transform .08s ease;
+}
+.icon-btn img{width:18px;height:18px;display:block;opacity:.92}
+.icon-btn:hover{background:rgba(255,255,255,.14)}
+.icon-btn:active{transform:translateY(1px);background:rgba(255,255,255,.20)}
 
 /* ============================================================
    정산 오버레이 — 상시 자리를 차지하지 않는다
@@ -688,22 +759,19 @@ input[type=range]{width:132px;accent-color:var(--sea)}
 
     <!-- ── 불턱 ──────────────────────────────────────────── -->
     <div id="scr-bulteok" class="screen">
-      <!-- ★ 일지/설정/타이틀 — '물질 n일째'와 위치를 서로 바꿔서
-           이제 상단 바(#bkTop) 왼쪽에 있다. -->
+      <!-- 우측 UI 뒤 딤 — 패널들보다 앞에 선언해 항상 뒤에 깔린다 -->
+      <div id="bkDim"></div>
+
+      <!-- 타이틀(뒤로가기)/일지/설정 — 아이콘 버튼 3개 + '물질 n일째'가
+           한 줄(#bkTop)에 나란히 있다. -->
       <div id="bkTop">
         <div id="hubBtns">
-          <button class="btn sm ghost" id="btnJournal">일지</button>
-          <button class="btn sm ghost" id="btnSet">설정</button>
-          <button class="btn sm ghost" id="btnToTitle">타이틀</button>
+          <button class="icon-btn" id="btnToTitle" aria-label="타이틀"><img src="./assets/ui/ic_back.svg" alt=""></button>
+          <button class="icon-btn" id="btnJournal" aria-label="일지"><img src="./assets/ui/ic_book.svg" alt=""></button>
+          <button class="icon-btn" id="btnSet" aria-label="설정"><img src="./assets/ui/ic_settings.svg" alt=""></button>
         </div>
-        <div id="bkRight">
-          <div id="bkMoney" class="mono">₩ 0</div>
-        </div>
+        <div id="bkDay">물질 1일째</div>
       </div>
-
-      <!-- '물질 n일째' — hubBtns 와 위치를 바꿔서 이제 좌측 상단
-           (장비 패널과 같은 top)에 단독으로 자리한다. -->
-      <div id="bkDay">물질 1일째</div>
 
       <!-- 살림 자리 — 불턱 배경 위의 핫스팟. hidden 이면 표시도 클릭도 안 된다.
            시각 효과는 전부 CSS ::after(젖은 광택)로, 라벨 텍스트는 없다 —
@@ -712,23 +780,25 @@ input[type=range]{width:132px;accent-color:var(--sea)}
       <button class="hotspot" id="hs-field"></button>
 
       <!-- 살림 구매 카드 — 모달 아님. homeState==='known' 인 자리 하나에만 뜬다 -->
-      <div id="homeCard" class="stone">
+      <div id="homeCard">
         <div id="homeCardName"></div>
-        <div id="homeCardPrice"></div>
         <div id="homeCardShort"></div>
-        <button class="btn sm gold" id="homeCardBuy">구매</button>
+        <button class="g-action" id="homeCardBuy"></button>
       </div>
 
-      <div id="gearPanel" class="stone">
-        <h3>장 비</h3>
-        <div class="gear-grid" id="gearGrid"></div>
+      <div id="gearPanel">
+        <div id="gearHead">
+          <h3>장비</h3>
+          <div id="bkMoney" class="mono">₩ 0</div>
+        </div>
+        <div class="gear-list" id="gearGrid"></div>
         <div id="gearNote"></div>
       </div>
 
       <!-- ★ 바당 선택 — 좌우로 넘기는 카드 캐러셀. 가운데(선택된) 카드가
            크게, 양옆 카드는 뒤로 살짝 빠져 보인다. 화살표 클릭·스와이프
            둘 다 지원(js/ui.js buildBadang/badangIdx 참고). -->
-      <div id="badangBar" class="stone">
+      <div id="badangBar">
         <h3>오늘 어디로 나갈까</h3>
         <div id="badangCarousel">
           <button class="bcArrow" id="bcPrev">‹</button>
@@ -778,14 +848,15 @@ input[type=range]{width:132px;accent-color:var(--sea)}
     </div>
 
     <!-- ── HUD (잠수) ─────────────────────────────────────
-         ★ 좌측 상단부터 세로로: 바다이름 → 타이머 시계 → kg·개수 정보 →
-           숨 게이지. 금액과 무게 게이지(막대)는 뺐다 — kg 숫자/개수 텍스트,
-           시계 숫자(#tideT)만 남는다. 수심은 우측 눈금자(#depthRuler,
-           화면 높이에 맞춰 길게)로 옮겼다. -->
+         ★ 좌측 상단부터 세로로: 타이머 시계 → kg·개수 정보 → 숨 게이지.
+           금액·무게 막대·장소명은 뺐다 — kg 숫자/개수 텍스트와 시계
+           숫자(#tideT)만 남는다. 수심은 우측 가장자리 눈금자(#depthRuler)로
+           옮겼고, 거기 숫자는 '현재 수심' 하나뿐이다. -->
     <div id="hud">
+      <!-- 타이머·무게 뒤 방사형 딤. #leftHud 보다 앞에 선언해 항상 뒤에 깔린다 -->
+      <div id="hudDimTop"></div>
       <div id="leftHud" class="gauge-group">
         <div id="timerWrap">
-          <div id="badangT">여</div>
           <div id="tideT" class="mono">2:30</div>
         </div>
         <div id="bagWrap">
@@ -797,19 +868,15 @@ input[type=range]{width:132px;accent-color:var(--sea)}
           <div id="o2Txt" class="mono">100</div>
         </div>
       </div>
-      <!-- 수심 눈금자 — 우측, 화면 높이에 맞춰 길게. 0 이 위, 이 바당의
-           최대 수심이 아래. tick() 이 매 프레임 마커 위치(top %)와 숫자를
-           갱신하고, 바당 진입 시 눈금 라벨을 새로 그린다. -->
+      <!-- 수심 눈금자 — 화면 오른쪽 가장자리. 0 이 위, 이 바당의 최대 수심이
+           아래. tick() 이 매 프레임 마커 위치(top %)와 숫자를 갱신하고,
+           바당 진입 시 눈금선을 새로 그린다(라벨 없음). -->
       <div id="depthRuler">
         <div id="drTrack"></div>
         <div id="drTicks"></div>
         <div id="drMarker"><span class="tri"></span><span id="drDepthTxt">0.0m</span></div>
       </div>
-      <div id="diveHint">드래그 이동 · Space 상승 · Shift 방출 · Esc 나가기</div>
-      <div id="touchBtns">
-        <button class="tbtn" id="btnAscend"><span class="ar">▲</span>상승</button>
-        <button class="tbtn" id="btnRelease">방출</button>
-      </div>
+      <button id="btnLetout" aria-label="방출"><img src="./assets/ui/ic_letout.svg" alt=""></button>
     </div>
 
     <!-- ── 정산 오버레이 ─────────────────────────────────── -->
@@ -885,7 +952,7 @@ input[type=range]{width:132px;accent-color:var(--sea)}
     <div id="toast"></div>
     <div id="fade"></div>
     <div id="diveLine"></div>
-    <div id="loading">숨 비</div>
+    <div id="loading"></div>
   </div>
 </div></div>
 

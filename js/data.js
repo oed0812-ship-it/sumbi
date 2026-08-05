@@ -110,7 +110,7 @@ var BADANG = [
   /* spawnMin/Max ★ 요청서 기준값은 26~32 였으나, 실측 수확이 7,120 으로
      목표(8,000~10,000)에 못 미쳐 30~36 으로 올렸습니다.
      "생물 가치는 건드리지 않는다" 원칙에 따라 개수만 조정했습니다. */
-  { id:1, key:'yeo', name:'여', depthM:12, tide:150, rank:'hagun',
+  { id:1, key:'yeo', name:'얕은 여', depthM:12, tide:150, rank:'hagun',
     tag:'짧고 안전', desc:'12m · 얕은 암초',
     lockText:'', spawnMin:30, spawnMax:36,
     kelp:0, colorLossFromM:99, lantern:false,
@@ -137,7 +137,7 @@ var BADANG = [
     diveLine:'감태 사이에 숨어있는 것들을 찾아보자' },
 
   { id:3, key:'gipeun', name:'깊은 여', depthM:26, tide:165, rank:'sanggun',
-    tag:'크지만 불확실', desc:'26m · 색이 사라진다',
+    tag:'크지만 불확실', desc:'26m · 빛이 사라진다',
     lockText:'상군 승급 필요', spawnMin:28, spawnMax:34,
     kelp:8, colorLossFromM:14, lantern:true,
     shaftCount:1, shaftAlpha:0.10,
@@ -269,9 +269,11 @@ var LINES = {
   blackout:    '바다는 안 도망가. 욕심부리지 말어.',
   tideEnd:     '물 들어온다. 그만 나가자.',
   ending:      '오늘은 밭에 먼저 가봐야지.',
+  mulsumWarn:  '숨이 모자라다',
 
   firstDive:   '숨은 유한하고, 바다는 도망가지 않는다.',
-  bagFull:     '망사리가 다 찼다.',
+  bagHeavy:    '망사리가 슬슬 무겁다',
+  bagFull:     '망사리가 가득 찼다',
   released:    '놓아주었다.',
   banked:      '테왁에 넣었다.',
   cantAfford:  '아직 돈이 모자라.',

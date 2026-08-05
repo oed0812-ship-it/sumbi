@@ -27,6 +27,8 @@ var CONFIG = {
   /* ── 무게 ── */
   WEIGHT_MAX: 10.0, WEIGHT_ASCEND_PENALTY: 0.72,
   WEIGHT_MOVE_PENALTY: 0.30, WEIGHT_SINK_BIAS: 0.6,
+  BAG_HEAVY_KG: 5.0,                    /* 이 무게를 넘으면 '슬슬 무겁다' 토스트 1회 */
+  BAG_FULL_TOAST_CD: 1.6,               /* 망사리가 가득 찬 채로 계속 채집을 시도할 때 토스트 재노출 간격(s) */
 
   /* ── 카메라 ── */
   CHAR_HEIGHT_PCT: 0.09,
@@ -50,7 +52,7 @@ var CONFIG = {
 
   /* ── 수면선 / 하늘 / 굴절 ── */
   HORIZON_OFFSET: 56,
-  WAVE_AMP: 14.5, FOAM: 0.7, SUBSURF_GLOW: 0.7,
+  WAVE_AMP: 10.5, FOAM: 0.7, SUBSURF_GLOW: 0.7,
   REFRACT_BAND: 50, REFRACT_AMP: 5, REFRACT_SPEED: 1.2,
 
   /* ── 연출 ── */
@@ -64,6 +66,7 @@ var CONFIG = {
   /* ── 월드 ── */
   TEWAK_X: 380, TEWAK_RADIUS: 26, SURFACE_LINE_M: 0.5,
   HARVEST_RADIUS: 44, HARVEST_MOVE_CANCEL: 0.35,
+  TEWAK_START_OFFSET_X: 70,   /* 잠수 시작 시 해녀가 테왁과 겹치지 않도록 옆으로 띄우는 거리 */
 
   /* ── 채집물 배치 거리 / 간격 ──
      ★ CRITTER_DIST_NEAR_FRAC~FAR_FRAC 는 테왁 기준 도달 거리를 "그쪽 방향으로

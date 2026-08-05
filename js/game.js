@@ -42,6 +42,8 @@ var GAME = (function () {
     o2: 100, o2Max: 100,
     bag: [], banked: [],
     bagW: 0, bagRatio: 0,
+    bagHeavyFired: false,  /* '슬슬 무겁다' 1회용 — BAG_HEAVY_KG 아래로 내려가면 풀린다 */
+    bagFullToastT: 0,      /* 망사리가 가득 찬 채로 채집을 계속 시도할 때 토스트 재노출 쿨다운 */
     weightMax: 10,
 
     tide: 150, tideMax: 150,
@@ -86,6 +88,16 @@ var GAME = (function () {
     for (var i = 0; i < G.bag.length; i++) w += SPECIES_BY_ID[G.bag[i].id].weight;
     G.bagW = w;
     G.bagRatio = clamp(w / G.weightMax, 0, 1);
+
+    /* ★ 5kg 를 넘어서는 순간 1회만 — 비워져서 다시 임계값 아래로 내려가면 풀린다 */
+    if (w > CONFIG.BAG_HEAVY_KG) {
+      if (!G.bagHeavyFired) {
+        G.bagHeavyFired = true;
+        if (typeof UI !== 'undefined') UI.toast(LINES.bagHeavy);
+      }
+    } else {
+      G.bagHeavyFired = false;
+    }
   }
 
 
@@ -320,6 +332,7 @@ var GAME = (function () {
     G.o2 = G.o2Max;
     G.bag.length = 0; G.banked.length = 0;
     G.bagW = 0; G.bagRatio = 0;
+    G.bagHeavyFired = false; G.bagFullToastT = 0;
     G.tideMax = B.tide; G.tide = B.tide; G.tideEnding = 0;
     G.mulsum = false; G.mulsumFired = false; G.mulsumEver = false;
     G.newDex.length = 0;
@@ -336,7 +349,8 @@ var GAME = (function () {
     G.bubbleT = 0;
 
     var P = G.player;
-    P.x = CONFIG.TEWAK_X; P.y = -4;
+    /* ★ 테왁 바로 위가 아니라 옆에서 시작해야 둘이 겹쳐 보이지 않는다 */
+    P.x = CONFIG.TEWAK_X + CONFIG.TEWAK_START_OFFSET_X; P.y = -4;
     P.vx = 0; P.vy = 0;
     P.ang = -Math.PI/2; P.angTarget = -Math.PI/2;
     P.curl = 0; P.kick = 0;
@@ -540,7 +554,11 @@ var GAME = (function () {
     var pct = G.o2 / G.o2Max * 100;
     var wasMul = G.mulsum;
     G.mulsum = pct <= CONFIG.MULSUM_THRESHOLD && G.submerged;
-    if (G.mulsum && !wasMul && !G.mulsumFired) { G.mulsumFired = true; FX.play('mulsum'); }
+    if (G.mulsum && !wasMul && !G.mulsumFired) {
+      G.mulsumFired = true;
+      FX.play('mulsum');
+      if (typeof UI !== 'undefined') UI.toast(LINES.mulsumWarn);
+    }
     if (!G.mulsum && wasMul) G.mulsumFired = false;
     if (G.mulsum) G.mulsumEver = true;
 
@@ -657,6 +675,8 @@ var GAME = (function () {
   function updateHarvest(dt, speed) {
     var P = G.player, H = G.harvest;
 
+    if (G.bagFullToastT > 0) G.bagFullToastT -= dt;
+
     if (H.target) {
       var t = H.target;
       if (t.taken) { H.target = null; H.t = 0; H.prog = 0; return; }
@@ -716,18 +736,25 @@ var GAME = (function () {
     /* ── 새 채집 시작 — 멈춰야 건다 ── */
     if (speed > CONFIG.HARVEST_MOVE_CANCEL) return;
 
-    var best = null, bd = CONFIG.HARVEST_RADIUS;
+    var best = null, bd = CONFIG.HARVEST_RADIUS, blockedByWeight = false;
     for (var i = 0; i < G.critters.length; i++) {
       var c = G.critters[i];
       if (c.taken) continue;
       var d = Math.hypot(c.x - P.x, c.y - P.y);
       if (d < bd) {
         var s = SPECIES_BY_ID[c.id];
-        if (G.bagW + s.weight > G.weightMax) continue;
+        if (G.bagW + s.weight > G.weightMax) { blockedByWeight = true; continue; }
         bd = d; best = c;
       }
     }
-    if (!best) return;
+    if (!best) {
+      /* ★ 망사리가 가득 찬 채로 계속 붙어서 시도하는 경우 — 스팸 방지 쿨다운으로 재노출 */
+      if (blockedByWeight && G.bagFullToastT <= 0) {
+        G.bagFullToastT = CONFIG.BAG_FULL_TOAST_CD;
+        if (typeof UI !== 'undefined') UI.toast(LINES.bagFull);
+      }
+      return;
+    }
 
     H.target = best; H.t = 0; H.prog = 0; H.stage = 1;
     H.variance = 1 + rand(-CONFIG.TIME_VARIANCE, CONFIG.TIME_VARIANCE);

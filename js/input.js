@@ -51,7 +51,7 @@ var INPUT = (function () {
   function onDown(e) {
     /* UI 버튼 위에서 시작한 포인터는 이동 입력으로 쓰지 않는다 */
     if (e.target && e.target.closest && e.target.closest('#ui > *:not(#hud)')) return;
-    if (e.target && e.target.closest && e.target.closest('.tbtn')) return;
+    if (e.target && e.target.closest && e.target.closest('#btnLetout')) return;
     if (e.button !== undefined && e.button !== 0) return;
 
     ptr.down = true;
